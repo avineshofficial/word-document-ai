@@ -46,10 +46,18 @@ function save(key: string, value: unknown) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function Home() {
-  const [activeTab,   setActiveTab]   = useState<'toc' | 'generate'>(() => load(STORE.TAB, 'toc'));
-  const [tocHeadings, setTocHeadings] = useState<Heading[]>(()        => load(STORE.TOC, []));
-  const [chatHistory, setChatHistory] = useState<ChatEntry[]>(()      => load(STORE.CHAT, []));
-  const [studentName, setStudentName] = useState<string>(()           => load(STORE.STUDENT, ''));
+  const [activeTab,   setActiveTab]   = useState<'toc' | 'generate'>('toc');
+  const [tocHeadings, setTocHeadings] = useState<Heading[]>([]);
+  const [chatHistory, setChatHistory] = useState<ChatEntry[]>([]);
+  const [studentName, setStudentName] = useState<string>('');
+
+  // Load persisted state only on the client to avoid SSR hydration mismatch.
+  useEffect(() => {
+    setActiveTab(load(STORE.TAB, 'toc'));
+    setTocHeadings(load(STORE.TOC, []));
+    setChatHistory(load(STORE.CHAT, []));
+    setStudentName(load(STORE.STUDENT, ''));
+  }, []);
 
   // Persist every change
   useEffect(() => { save(STORE.TAB,     activeTab);   }, [activeTab]);
