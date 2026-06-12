@@ -16,10 +16,11 @@ export default function TocEditor({ onUpdate, onContinue, initialHeadings }: Pro
   const [parsedHeadings, setParsedHeadings] = useState<Heading[]>(initialHeadings);
   const [loading,        setLoading]        = useState(false);
 
-  // If parent already has headings (restored from localStorage), show them immediately
+  // Sync with parent state (especially important for Reset/Start Over)
   useEffect(() => {
-    if (initialHeadings.length > 0 && parsedHeadings.length === 0) {
-      setParsedHeadings(initialHeadings);
+    setParsedHeadings(initialHeadings);
+    if (initialHeadings.length === 0) {
+      setRawText('');
     }
   }, [initialHeadings]);
 

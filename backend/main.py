@@ -232,6 +232,47 @@ async def download_document(filename: str):
     raise HTTPException(status_code=404, detail="File not found")
 
 
+
+# ── Lab Report Storage Endpoints ──────────────────────────────────────────────
+
+class SaveDataRequest(BaseModel):
+    value: Any
+
+@app.post("/api/store/{key}")
+async def save_store_data(key: str, request: SaveDataRequest):
+    """Saves arbitrary key-value store data to a JSON file."""
+    try:
+        # Sanitize key name to prevent directory traversal
+        safe_key = "".join([c for c in key if c.isalnum() or c in ("_", "-")])
+        if not safe_key:
+            raise HTTPException(status_code=400, detail="Invalid key name")
+        
+        file_path = os.path.join(OUTPUT_DIR, f"store_{safe_key}.json")
+        import json
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump({"value": request.value}, f, ensure_ascii=False, indent=2)
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"STORE SAVE ERROR: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/store/{key}")
+async def load_store_data(key: str):
+    """Loads arbitrary key-value store data from a JSON file."""
+    try:
+        safe_key = "".join([c for c in key if c.isalnum() or c in ("_", "-")])
+        file_path = os.path.join(OUTPUT_DIR, f"store_{safe_key}.json")
+        if os.path.exists(file_path):
+            import json
+            with open(file_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            return {"success": True, "value": data.get("value")}
+        return {"success": False, "value": None}
+    except Exception as e:
+        logger.error(f"STORE LOAD ERROR: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/health")
 async def health_check():
     return {"status": "healthy", "service": "Document AI Generator"}
